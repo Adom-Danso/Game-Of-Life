@@ -1,3 +1,8 @@
+// Authors: Alan Jimenez, Arian Golkari , Adom Danso
+// Course: CMPT 1109
+// Date: [Submission Date]
+// Purpose: Solution to group project
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -15,6 +20,20 @@ const int MINIMUM_POSITIVE_NUMBER = 1;
 const int NO_BEST_GAME = -1;
 const double MIN_PROBABILITY = 0.0;
 const double MAX_PROBABILITY = 1.0;
+const int INVALID_POSITIVE_INTEGER = 0;
+const double INVALID_PROBABILITY = -1.0;
+const int MIN_SURVIVAL_NEIGHBOURS = 2;
+const int MAX_SURVIVAL_NEIGHBOURS = 3;
+const int BIRTH_NEIGHBOURS = 3;
+
+const int DISPLAY_INITIAL_BOARD = 1;
+const int LOAD_INITIAL_BOARD = 2;
+const int PLAY_GAME = 3;
+const int SEED_CELLS = 4;
+const int REPORT_STATISTICS = 5;
+const int RANDOM_EXPERIMENTS = 6;
+const int DISPLAY_BEST_BOARD = 7;
+const int QUIT_PROGRAM = 8;
 
 // Alan - Game records
 struct GameRecord
@@ -80,32 +99,32 @@ int main()
             continue;
         }
 
-        if (userInput == 8)
+        if (userInput == QUIT_PROGRAM)
         {
             break;
         }
 
         switch (userInput)
         {
-        case 1:
+        case DISPLAY_INITIAL_BOARD:
             displayBoard(initialBoard, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
             break;
-        case 2:
+        case LOAD_INITIAL_BOARD:
             getCSVFILE(initialBoard, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
             break;
-        case 3:
+        case PLAY_GAME:
             runAndRecordGame(initialBoard, true);
             break;
-        case 4:
+        case SEED_CELLS:
             seedRandomCells(initialBoard, NUMBER_OF_ROWS, NUMBER_OF_COLUMNS);
             break;
-        case 5:
+        case REPORT_STATISTICS:
             displayGameStatistics();
             break;
-        case 6:
+        case RANDOM_EXPERIMENTS:
             runRandomExperiments();
             break;
-        case 7:
+        case DISPLAY_BEST_BOARD:
             displayBestInitialBoard();
             break;
         }
@@ -134,7 +153,7 @@ void displayMenu()
 
 bool validateChoice(int userChoice)
 {
-    return userChoice >= 1 && userChoice <= 8;
+    return userChoice >= DISPLAY_INITIAL_BOARD && userChoice <= QUIT_PROGRAM;
 }
 
 void displayBoard(const int board[][BOARD_SIZE], int rows, int cols, bool csvFormat)
@@ -151,17 +170,6 @@ void displayBoard(const int board[][BOARD_SIZE], int rows, int cols, bool csvFor
                     cout << ",";
                 }
             }
-            // else
-            // {
-            //     if (board[row][col] == 1)
-            //     {
-            //         cout << " ❤️ ";
-            //     }
-            //     else
-            //     {
-            //         cout << " 0 ";
-            //     }
-            // }
             else
             {
                 cout << "| " << board[row][col] << " |";
@@ -217,7 +225,7 @@ bool loadCSV(string filename, int rows, int cols, int board[][BOARD_SIZE])
         return false;
     }
 
-    // Only replace the initial board after the entire CSV is valid.
+    // only updates the board if the file is valid
     int tempBoard[BOARD_SIZE][BOARD_SIZE] = {};
     if (!validateCSV(userFile, rows, cols, tempBoard))
     {
@@ -256,6 +264,7 @@ void getCSVFILE(int board[][BOARD_SIZE], int rows, int cols)
 
 void seedRandomCells(int board[][BOARD_SIZE], int rows, int cols)
 {
+    // counts how many dead cells are available
     int availableCells = 0;
     for (int row = 0; row < rows; row++)
     {
@@ -278,7 +287,7 @@ void seedRandomCells(int board[][BOARD_SIZE], int rows, int cols)
     while (true)
     {
         numberOfCellsToAdd = getPositiveInteger("How many cells would you like the scientist to add? ");
-        if (numberOfCellsToAdd == 0)
+        if (numberOfCellsToAdd == INVALID_POSITIVE_INTEGER)
         {
             return;
         }
@@ -368,6 +377,7 @@ int checkAdjacentCells(const int board[][BOARD_SIZE], int row, int col)
     {
         for (int j = currentCol; j < maxCol; j++)
         {
+            // skips the current cell
             if (i == row && j == col)
             {
                 continue;
@@ -390,7 +400,7 @@ void calculateNextYear(const int currentBoard[][BOARD_SIZE], int nextBoard[][BOA
             int neighbours = checkAdjacentCells(currentBoard, row, col);
             if (currentBoard[row][col] == LIVE_CELL)
             {
-                if (neighbours == 2 || neighbours == 3)
+                if (neighbours == MIN_SURVIVAL_NEIGHBOURS || neighbours == MAX_SURVIVAL_NEIGHBOURS)
                 {
                     nextBoard[row][col] = LIVE_CELL;
                 }
@@ -401,7 +411,7 @@ void calculateNextYear(const int currentBoard[][BOARD_SIZE], int nextBoard[][BOA
             }
             else
             {
-                if (neighbours == 3)
+                if (neighbours == BIRTH_NEIGHBOURS)
                 {
                     nextBoard[row][col] = LIVE_CELL;
                 }
@@ -444,6 +454,7 @@ int simulateGame(const int startingBoard[][BOARD_SIZE], int &yearsPlayed, bool d
 {
     int currentBoard[BOARD_SIZE][BOARD_SIZE];
     int nextBoard[BOARD_SIZE][BOARD_SIZE];
+    // keeps a copy of the starting board
     copyBoard(startingBoard, currentBoard);
 
     yearsPlayed = 0;
@@ -452,12 +463,13 @@ int simulateGame(const int startingBoard[][BOARD_SIZE], int &yearsPlayed, bool d
     if (displayEachYear)
     {
         cout << "Year " << yearsPlayed << endl;
-        displayBoard(currentBoard, BOARD_SIZE, BOARD_SIZE);
+        displayBoard(currentBoard, BOARD_SIZE, BOARD_SIZE, true);
     }
 
     while (livingCells > 0 && yearsPlayed < MAX_YEARS)
     {
         calculateNextYear(currentBoard, nextBoard);
+        // checks if the board has changed
         bool unchanged = boardsAreEqual(currentBoard, nextBoard);
         copyBoard(nextBoard, currentBoard);
         yearsPlayed++;
@@ -466,8 +478,9 @@ int simulateGame(const int startingBoard[][BOARD_SIZE], int &yearsPlayed, bool d
         if (displayEachYear)
         {
             cout << "Year " << yearsPlayed << endl;
-            displayBoard(currentBoard, BOARD_SIZE, BOARD_SIZE);
+            displayBoard(currentBoard, BOARD_SIZE, BOARD_SIZE, true);
         }
+        // stops the game if nothing changes
         if (unchanged)
         {
             break;
@@ -480,17 +493,12 @@ int simulateGame(const int startingBoard[][BOARD_SIZE], int &yearsPlayed, bool d
 GameRecord runAndRecordGame(const int startingBoard[][BOARD_SIZE], bool displayEachYear)
 {
     GameRecord newRecord;
+    // saves the board before the game starts
     copyBoard(startingBoard, newRecord.startingBoard);
     newRecord.livingCells = simulateGame(startingBoard, newRecord.yearsPlayed, displayEachYear);
     newRecord.deadCells = (BOARD_SIZE * BOARD_SIZE) - newRecord.livingCells;
 
     gameHistory.push_back(newRecord);
-    if (!hasBestGame || newRecord.livingCells > bestLivingCells)
-    {
-        bestLivingCells = newRecord.livingCells;
-        copyBoard(startingBoard, bestInitialBoard);
-        hasBestGame = true;
-    }
     return newRecord;
 }
 
@@ -503,7 +511,7 @@ int getPositiveInteger(string message)
         cout << message;
         if (!getline(cin, line))
         {
-            return 0;
+            return INVALID_POSITIVE_INTEGER;
         }
         stringstream input(line);
         if ((input >> number) && number >= MINIMUM_POSITIVE_NUMBER && !(input >> extra))
@@ -523,7 +531,7 @@ double getProbability()
         cout << "Enter the probability of a cell being alive (0-1): ";
         if (!getline(cin, line))
         {
-            return -1.0;
+            return INVALID_PROBABILITY;
         }
         stringstream input(line);
         if ((input >> probability) && isfinite(probability) &&
@@ -561,12 +569,12 @@ void displayGameStatistics()
 void runRandomExperiments()
 {
     int numberOfGames = getPositiveInteger("How many games would you like to play? ");
-    if (numberOfGames == 0)
+    if (numberOfGames == INVALID_POSITIVE_INTEGER)
     {
         return;
     }
     double probability = getProbability();
-    if (probability < MIN_PROBABILITY)
+    if (probability == INVALID_PROBABILITY)
     {
         return;
     }
@@ -605,6 +613,20 @@ void runRandomExperiments()
 
 void displayBestInitialBoard()
 {
+    bestLivingCells = NO_BEST_GAME;
+    hasBestGame = false;
+
+    // finds the game with the most living cells
+    for (size_t i = 0; i < gameHistory.size(); i++)
+    {
+        if (!hasBestGame || gameHistory[i].livingCells > bestLivingCells)
+        {
+            bestLivingCells = gameHistory[i].livingCells;
+            copyBoard(gameHistory[i].startingBoard, bestInitialBoard);
+            hasBestGame = true;
+        }
+    }
+
     if (!hasBestGame)
     {
         cout << "No completed games are available yet." << endl;
