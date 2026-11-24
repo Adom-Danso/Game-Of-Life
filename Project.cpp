@@ -151,21 +151,21 @@ void displayBoard(const int board[][BOARD_SIZE], int rows, int cols, bool csvFor
                     cout << ",";
                 }
             }
-            else
-            {
-                if (board[row][col] == 1)
-                {
-                    cout << " ❤️ ";
-                }
-                else
-                {
-                    cout << " 0 ";
-                }
-            }
             // else
             // {
-            //     cout << "| " << board[row][col] << " |";
+            //     if (board[row][col] == 1)
+            //     {
+            //         cout << " ❤️ ";
+            //     }
+            //     else
+            //     {
+            //         cout << " 0 ";
+            //     }
             // }
+            else
+            {
+                cout << "| " << board[row][col] << " |";
+            }
         }
         cout << endl;
     }
